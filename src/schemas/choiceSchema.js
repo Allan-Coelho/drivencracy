@@ -5,4 +5,6 @@ const choiceSchema = Joi.object({
   pollId: Joi.string().length(24).required(),
 });
 
-export { choiceSchema };
+const choiceIdSchema = Joi.string().length(24).required();
+
+export { choiceSchema, choiceIdSchema };

@@ -1,9 +1,9 @@
 import database from "../database/database.js";
 import { STATUS_CODE } from "../enums/statusCode.js";
 import { COLLECTIONS } from "../enums/collections.js";
-import { choiceSchema } from "../schemas/choiceSchema.js";
+import { choiceSchema, choiceIdSchema } from "../schemas/choiceSchema.js";
 
-async function choiceValidation(request, response, next) {
+async function choiceSchemaValidation(request, response, next) {
   try {
     const now = Date.now();
     const body = response.locals.body;
@@ -46,4 +46,33 @@ async function choiceValidation(request, response, next) {
   }
 }
 
-export { choiceValidation };
+async function choiceSelectionValidation(request, response, next) {
+  try {
+    const now = Date.now();
+    const { id } = response.locals.params;
+    const { value, error } = choiceIdSchema.validate(id);
+    const poll = await polls.findOne({ pollId: value });
+
+    if (error !== undefined) {
+      response.status(STATUS_CODE.UNPROCESSABLE_ENTITY).send("invalid poll id");
+      return;
+    }
+
+    if (poll === null) {
+      response.status(STATUS_CODE.NOT_FOUND).send("poll not found");
+      return;
+    }
+
+    if (new Date(poll.expireAt).getMilliseconds() < now) {
+      response.sendStatus(STATUS_CODE.FORBIDDEN);
+      return;
+    }
+    
+    next();
+  } catch (err) {
+    console.log(err);
+    response.sendStatus(STATUS_CODE.SERVER_ERROR);
+  }
+}
+
+export { choiceSchemaValidation, choiceSelectionValidation };

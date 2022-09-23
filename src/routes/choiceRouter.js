@@ -1,6 +1,9 @@
 import express from "express";
 import { htmlSanitizer } from "../middlewares/HTMLsanitizer.js";
-import { choiceValidation } from "../middlewares/choiceSchemaValidation.js";
+import {
+  choiceSchemaValidation,
+  choiceSelectionValidation,
+} from "../middlewares/choiceSchemaValidation.js";
 import {
   createChoice,
   registerChoice,
@@ -8,7 +11,12 @@ import {
 
 const router = express.Router();
 
-router.post("/choice", htmlSanitizer, choiceValidation, createChoice);
-router.post("/choice/:id/vote", htmlSanitizer, registerChoice);
+router.post("/choice", htmlSanitizer, choiceSchemaValidation, createChoice);
+router.post(
+  "/choice/:id/vote",
+  htmlSanitizer,
+  choiceSelectionValidation,
+  registerChoice
+);
 
 export default router;

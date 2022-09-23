@@ -19,7 +19,7 @@ function createChoice(request, response) {
 function registerChoice(request, response) {
   const { id } = response.locals.params;
   const choices = database.collection(COLLECTIONS.CHOICES);
-  const now = dayjs().format("YYYY-MM-DD");
+  const now = dayjs().format("YYYY-MM-DD HH:mm");
 
   choices.insertOne({
     createAt: now,
