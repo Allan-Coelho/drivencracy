@@ -8,7 +8,7 @@ async function choiceValidation(request, response, next) {
     const now = Date.now();
     const body = response.locals.body;
     const polls = database.collection(COLLECTIONS.POLLS);
-    const choices = database.collection(COLLECTIONS.CHOICES);
+    const choices = database.collection(COLLECTIONS.POLLS_CHOICES);
     const { error, value } = choiceSchema.validate(body);
     const { pollId, title } = value;
     const poll = await polls.findOne({ pollId: pollId });
