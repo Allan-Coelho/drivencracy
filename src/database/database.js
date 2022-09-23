@@ -16,6 +16,6 @@ try {
   console.error(err.message);
 }
 
-const database = mongoClient.db("mosca_atacadista");
+const database = mongoClient.db("drivencracy");
 
 export default database;

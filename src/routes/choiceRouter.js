@@ -1,5 +1,9 @@
 import express from "express";
 import { htmlSanitizer } from "../middlewares/HTMLsanitizer.js";
+import {
+  createChoice,
+  registerChoice,
+} from "../controllers/choiceController.js";
 
 const router = express.Router();
 
