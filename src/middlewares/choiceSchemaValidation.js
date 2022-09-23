@@ -67,7 +67,7 @@ async function choiceSelectionValidation(request, response, next) {
       response.sendStatus(STATUS_CODE.FORBIDDEN);
       return;
     }
-    
+
     next();
   } catch (err) {
     console.log(err);
