@@ -1,22 +1,7 @@
 import { stripHtml } from "string-strip-html";
 
 const requestObjectsToSanitize = ["headers", "body", "query", "params"];
-const propertiesToSanitize = [
-  "limit",
-  "email",
-  "password",
-  "name",
-  "type",
-  "value",
-  "description",
-  "date",
-  "profilePictureURL",
-  "category",
-  "productId",
-  "price",
-  "pictures",
-  "promotion",
-];
+const propertiesToSanitize = ["pollId", "title"];
 
 function htmlSanitizer(request, response, next) {
   console.log("Sanitize begin");
