@@ -1,7 +1,7 @@
 import { stripHtml } from "string-strip-html";
 
 const requestObjectsToSanitize = ["headers", "body", "query", "params"];
-const propertiesToSanitize = ["pollId", "title"];
+const propertiesToSanitize = ["pollId", "title", "expireAt", "choiceId", "id"];
 
 function htmlSanitizer(request, response, next) {
   console.log("Sanitize begin");

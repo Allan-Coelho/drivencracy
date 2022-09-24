@@ -8,19 +8,25 @@ import { ObjectId } from "mongodb";
 function createPoll(request, response) {
   try {
     const willExpireAt = Date.now() + MINUTES.DAYS_30;
-    const { expireAt, title } = response.locals.body;
+    let { expireAt, title } = response.locals.body;
     const polls = database.collection(COLLECTIONS.POLLS);
 
     if (expireAt === undefined || expireAt === null || expireAt === "") {
       expireAt = dayjs(willExpireAt).format("YYYY-MM-DD HH:mm");
     }
 
-    polls.insertOne({
-      title: title,
-      expireAt: willExpireAt,
-    });
-
-    response.sendStatus(STATUS_CODE.CREATED);
+    polls
+      .insertOne({
+        title: title,
+        expireAt: dayjs(expireAt).format("YYYY-MM-DD HH:mm"),
+      })
+      .then((insertionData) => {
+        response.status(STATUS_CODE.CREATED).send({
+          _id: insertionData.insertedId,
+          title: title,
+          expireAt: dayjs(expireAt).format("YYYY-MM-DD HH:mm"),
+        });
+      });
   } catch (err) {
     console.log(err);
     response.sendStatus(STATUS_CODE.SERVER_ERROR);
@@ -43,11 +49,19 @@ async function allPolls(request, response) {
 
 async function getPollChoices(request, response) {
   try {
-    const { id } = response.locals.param;
+    const { id } = response.locals.params;
     const pollsChoices = database.collection(COLLECTIONS.POLLS_CHOICES);
+    const polls = database.collection(COLLECTIONS.POLLS);
+    const isPollCreated =
+      (await polls.findOne({ _id: ObjectId(id) })) !== null ? true : false;
     const pollChoices = await pollsChoices
-      .find({ _id: ObjectId(id) })
+      .find({ pollId: ObjectId(id) })
       .toArray();
+
+    if (isPollCreated === false) {
+      response.sendStatus(STATUS_CODE.NOT_FOUND);
+      return;
+    }
 
     response.send(pollChoices);
   } catch (err) {
@@ -58,17 +72,15 @@ async function getPollChoices(request, response) {
 
 async function getPollResult(request, response) {
   try {
-    const { id } = response.locals.param;
-    const pollsChoices = database.collection(COLLECTIONS.CHOICES);
+    const { id } = response.locals.params;
+    const pollsChoices = database.collection(COLLECTIONS.POLLS_CHOICES);
     const polls = database.collection(COLLECTIONS.POLLS);
+    const choices = database.collection(COLLECTIONS.CHOICES);
     const poll = await polls.findOne({ _id: ObjectId(id) });
+    const ranking = [];
     const pollChoices = await pollsChoices
       .find({ pollId: ObjectId(id) })
       .toArray();
-    const mostVoted = {
-      title: pollChoices[0],
-      votesCounter: 1,
-    };
 
     if (poll === null) {
       response.sendStatus(STATUS_CODE.NOT_FOUND);
@@ -76,28 +88,31 @@ async function getPollResult(request, response) {
     }
 
     for (let i = 0, len0 = pollChoices.length; i < len0; i++) {
-      let counter = 0;
-      let title = pollChoices[i].title;
+      let pollChoice = pollChoices[i];
 
-      for (let j = 0, len1 = pollChoices.length; j < len1; j++) {
-        if (pollChoices[j].title === title) {
-          counter += 1;
-        }
-      }
+      const votes = await choices
+        .find({ choiceId: ObjectId(pollChoice._id) })
+        .toArray();
 
-      if (mostVoted.votesCounter < counter) {
-        mostVoted.title = title;
-        mostVoted.votesCounter = counter;
-      }
+      ranking.push({
+        title: pollChoice.title,
+        votes: votes.length,
+      });
     }
+
+    ranking.sort((a, b) => {
+      return a.votes - b.votes;
+    });
+
+    ranking.reverse();
 
     response.send({
       _id: id,
-      title: mostVoted.title,
-      expireAt: "2022-02-14 01:00",
+      title: poll.title,
+      expireAt: poll.expireAt,
       result: {
-        title: "Javascript",
-        votes: 487,
+        title: ranking[0].title,
+        votes: ranking[0].votes,
       },
     });
   } catch (err) {
